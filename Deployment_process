@@ -1,0 +1,6 @@
+in this we have used github(developer end), Jenkins (for ci) ansible (as infra ,use to direct traffic on webserver)  webserver 
+
+we have three servers jenkins , Ansible, Webserver
+now we have to make passwordless communication between the servers (jenkins to Ansible) (Ansible to Webserver)
+for that first we se password for each and every instance #passwd root 
+then we modify config file for passworrdless communication # vim /etc/ssh/sshd_config in that we 
