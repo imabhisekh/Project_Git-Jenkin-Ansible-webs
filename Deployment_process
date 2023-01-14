@@ -2,5 +2,51 @@ in this we have used github(developer end), Jenkins (for ci) ansible (as infra ,
 
 we have three servers jenkins , Ansible, Webserver
 now we have to make passwordless communication between the servers (jenkins to Ansible) (Ansible to Webserver)
-for that first we se password for each and every instance #passwd root 
-then we modify config file for passworrdless communication # vim /etc/ssh/sshd_config in that we 
+for that first we set password and key gen for each and every instance #passwd root  and generate key #ssh-keygen
+then we modify config file for passworrdless communication on every instance  # vim /etc/ssh/sshd_config in that we uncomment {permitrootlogin yes} and {passwordauthentication yes}.
+then update the kernel bcz you change in config file # systemctl reload sshd
+now apply this commnad to communicate between (jenkin to ansible) on jenkin # ssh-copy-id -i root@PVT_IP_Ansible   (to check use ssh  root@pvt ip of ansible )
+                                           (ansible to webserver) on ansible # ssh-icopy-id -i root@PVT_IP_Webserver
+now in Ansible server add private ip of webserver in hosts file # vim /etc/ansible/hosts    in line 17 [web] paste pvt ip below
+now create directory in ansible or where developer say for ex i have created dir # mkdir /sourcecode in that create playbook.yaml
+- hosts: all
+  tasks:
+     -copy:
+       src: /opt/index.html    this file will come after compiling jenkins server and it will come in asible /opt folder
+       dest: /var/www/html     so now this file will run on webserver so we mention dest of webserver 
+       
+now we go github where our code is 
+   we are integrating github with jenkins using webhook 
+   > goto that repo and select setting >webhook > addwebhok >payload url (jenkin_url/github-webhook)
+      content type  (application/json) > secrete (go to jenkins tap on username, configure,addtoken and generate copy that token and paste in secrete)
+      now install plugin on jenkin [public over ssh ] this will build communication with servers.
+      
+ we need to add credential of ssh in jenkins  go to > manage jenkins > configure system > scroll down > in ssh server  > add in that 
+ Name (jenkins), Hostanme (private ip of jenkin), Username (root), tap on Advance Use password tick on that add password of root  apply save .
+ now create job frestyle > Source code management >use git add http link of repo and if bellow error showing so go to jenkin server and install #yum install git
+ now simply  go to build . so it will create workspace  now goto jenkin server and # cd /var/lib/jenkins/workspace/project_name #pwd copy path 
+
+and go to jenkin console and now open that project and configure  in that add SCM git url >BUILD (send file or execute command over ssh) name (jenkins) and 
+ 
+ >Build Triggers (github hoot trigger for GITScm pulling) we use this for when we change in our git repo code it will run automatically on jenkins 
+    build and show to web.
+ in Exec command  write ## rsync -avh /var/lib/jenkins/workspace/project_name/*.html root@pvt_ip_Ansible ( so it will copy file to ansible in /opt)
+ 
+ then below POST-BUILD ACTION in that > Name (Ansible) Exec command ## ansible-playbook /sourcecode/playbook.yml ( it will run ansible playbook so the file from /opt go to destination on web server)
+                                                                        <command>  <path_of_directory> <playbook_name>
+ Now build . it will done  past url of webserver in webbrowser. you will get output .
+ 
+ 
+ 
+ So, if code will change in git hub repom it will automatically build and shown on web browser 
+ 
+ 
+ some commands from developer  in developer server 
+ #git clone http_urlof git repo
+ # goto project 
+ # vim index.html (sourcecode)
+ add content 
+ #git commit -m "commit name "
+# git push origin master
+
+                                                                     
